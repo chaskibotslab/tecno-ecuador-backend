@@ -12,13 +12,25 @@ const app = express();
 app.use(cors());
 const upload = multer({ dest: 'uploads/' });
 
-const KEYFILEPATH = './roboticoncurso-f4daec7e9d78.json';
 const SCOPES = ['https://www.googleapis.com/auth/drive.file'];
 
-const auth = new google.auth.GoogleAuth({
-  keyFile: KEYFILEPATH,
-  scopes: SCOPES,
-});
+// Usar credenciales desde variable de entorno o archivo local
+let auth;
+if (process.env.GOOGLE_CREDENTIALS_JSON) {
+  // Para entorno de producción (Railway)
+  const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
+  auth = new google.auth.GoogleAuth({
+    credentials,
+    scopes: SCOPES,
+  });
+} else {
+  // Para entorno de desarrollo local
+  const KEYFILEPATH = './roboticoncurso-f4daec7e9d78.json';
+  auth = new google.auth.GoogleAuth({
+    keyFile: KEYFILEPATH,
+    scopes: SCOPES,
+  });
+}
 const drive = google.drive({ version: 'v3', auth });
 
 const FOLDER_ID = process.env.DRIVE_FOLDER_ID;
