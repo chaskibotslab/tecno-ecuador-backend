@@ -9,7 +9,8 @@ export default function useEquipos() {
     async function fetchEquipos() {
       setLoading(true);
       try {
-        const API_URL = process.env.REACT_APP_API_URL || 'http://192.168.1.100:3001';
+        // const API_URL = process.env.REACT_APP_API_URL || 'http://192.168.1.100:3001';
+        const API_URL = 'https://api-tecno-ecuador.up.railway.app'; // Forzar uso del servidor local
         const res = await axios.post(`${API_URL}/saveAirtable`, {
           table: 'equipos',
           action: 'list'

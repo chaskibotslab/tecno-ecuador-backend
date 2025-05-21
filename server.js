@@ -9,6 +9,19 @@ import axios from 'axios';
 dotenv.config();
 
 const app = express();
+// Configuración CORS para permitir solicitudes desde cualquier origen
+app.use(function(req, res, next) {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  // Manejar las solicitudes de preflight OPTIONS
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
+// Mantener también el middleware cors para compatibilidad
 app.use(cors());
 const upload = multer({ dest: 'uploads/' });
 

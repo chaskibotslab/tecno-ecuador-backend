@@ -13,13 +13,10 @@ import NoticiasList from './NoticiasList';
 import FormEvento from './FormEvento';
 
 function App() {
-  // Simulación de usuario administrador
-  const [isAdmin, setIsAdmin] = useState(() => {
-    const stored = localStorage.getItem('isAdmin');
-    return stored === 'true';
-  });
+  // Forzar usuario administrador para desarrollo
+  const [isAdmin, setIsAdmin] = useState(true); // Siempre administrador
   const [adminInput, setAdminInput] = useState("");
-  const adminPassword = "adminchaski2024"; // Puedes cambiar esta clave
+  const adminPassword = "adminchaski2024"; // No se usa porque forzamos admin = true
   const [section, setSection] = useState('eventos');
   const [nombreEvento, setNombreEvento] = useState('');
   const [descripcion, setDescripcion] = useState('');
@@ -119,30 +116,240 @@ function App() {
         )}
         {section === 'agregar' && (
           <div style={{
-            display: 'grid',
-            gridTemplateColumns: window.innerWidth < 900 ? '1fr' : 'repeat(2, 1fr)',
-            gap: 32,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
             justifyContent: 'center',
-            alignItems: 'flex-start',
+            gap: 40,
             margin: '0 auto',
-            maxWidth: 1200,
             width: '100%',
-            overflowX: 'auto',
-            paddingTop: 0,
+            padding: '10px 15px 40px',
+            maxWidth: 1200
           }}>
-            <div style={{background:'#181b24',borderRadius:16,padding:20,boxShadow:'0 2px 12px #0033A044',minWidth:280}}><FormEvento /></div>
-            <div style={{background:'#181b24',borderRadius:16,padding:20,boxShadow:'0 2px 12px #0033A044',minWidth:280}}><FormEquipo /></div>
-            <div style={{background:'#181b24',borderRadius:16,padding:20,boxShadow:'0 2px 12px #0033A044',minWidth:280}}>{isAdmin ? <FormEmpresa /> : <div style={{color:'#555',fontWeight:700,textAlign:'center'}}>Solo administradores pueden registrar empresas</div>}</div>
-            <div style={{background:'#181b24',borderRadius:16,padding:20,boxShadow:'0 2px 12px #0033A044',minWidth:280}}>{isAdmin ? <FormNoticia /> : <div style={{color:'#555',fontWeight:700,textAlign:'center'}}>Solo administradores pueden registrar noticias</div>}</div>
-            <div style={{background:'#181b24',borderRadius:16,padding:20,boxShadow:'0 2px 12px #0033A044',minWidth:280}}><FormMiembro /></div>
+            {/* Cabecera de registro */}
+            <div style={{
+              background: 'linear-gradient(135deg, #2563EB 0%, #8B5CF6 50%, #3B82F6 100%)',
+              borderRadius: 16,
+              padding: '30px 25px',
+              width: '100%',
+              marginBottom: 10,
+              position: 'relative',
+              overflow: 'hidden',
+              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2)'
+            }}>
+              <h2 style={{
+                margin: 0,
+                color: '#fff',
+                fontSize: 28,
+                fontWeight: 600,
+                textShadow: '0 2px 10px rgba(0,0,0,0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12
+              }}>
+                <span style={{ fontSize: 32 }}>📝</span>
+                Registros
+              </h2>
+              
+              <p style={{
+                color: 'rgba(255,255,255,0.8)',
+                margin: '10px 0 0 0',
+                maxWidth: 600,
+                fontSize: 16
+              }}>
+                Seleccione el formulario que necesita completar
+              </p>
+              
+              {/* Decoración futurista */}
+              <div style={{
+                position: 'absolute',
+                right: 0,
+                top: 0,
+                height: '100%',
+                width: '40%',
+                background: 'radial-gradient(circle at right, rgba(255,255,255,0.15), transparent 70%)',
+                pointerEvents: 'none'
+              }}></div>
+            </div>
+            
+            {/* Contenedor de tarjetas de formularios */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: window.innerWidth < 768 ? '1fr' : 
+                               window.innerWidth < 1200 ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
+              gap: '30px',
+              width: '100%',
+            }}>
+              {/* Formulario de Evento - accesible para todos */}
+              <div style={{
+                background: '#1E293B', 
+                borderRadius: 16, 
+                overflow: 'hidden',
+                boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2)',
+                border: '1px solid #334155',
+                display: 'flex',
+                flexDirection: 'column'
+              }}>
+                <div style={{
+                  padding: '20px 25px',
+                  borderBottom: '1px solid #334155',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  background: 'rgba(37, 99, 235, 0.1)'
+                }}>
+                  <span style={{ fontSize: 24, color: '#F97316' }}>🎯</span>
+                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#F1F5F9' }}>Registrar Evento</h3>
+                </div>
+                <div style={{ padding: 0 }}>
+                  <FormEvento />
+                </div>
+              </div>
+              
+              {/* Formulario de Equipo - accesible para todos */}
+              <div style={{
+                background: '#1E293B', 
+                borderRadius: 16, 
+                overflow: 'hidden',
+                boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2)',
+                border: '1px solid #334155',
+                display: 'flex',
+                flexDirection: 'column'
+              }}>
+                <div style={{
+                  padding: '20px 25px',
+                  borderBottom: '1px solid #334155',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  background: 'rgba(16, 185, 129, 0.1)'
+                }}>
+                  <span style={{ fontSize: 24, color: '#10B981' }}>👥</span>
+                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#F1F5F9' }}>Registrar Equipo</h3>
+                </div>
+                <div style={{ padding: 0 }}>
+                  <FormEquipo />
+                </div>
+              </div>
+              
+              {/* Formulario de Miembro - accesible para todos */}
+              <div style={{
+                background: '#1E293B', 
+                borderRadius: 16, 
+                overflow: 'hidden',
+                boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2)',
+                border: '1px solid #334155',
+                display: 'flex',
+                flexDirection: 'column'
+              }}>
+                <div style={{
+                  padding: '20px 25px',
+                  borderBottom: '1px solid #334155',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  background: 'rgba(139, 92, 246, 0.1)'
+                }}>
+                  <span style={{ fontSize: 24, color: '#8B5CF6' }}>👤</span>
+                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#F1F5F9' }}>Registrar Miembro</h3>
+                </div>
+                <div style={{ padding: 0 }}>
+                  <FormMiembro />
+                </div>
+              </div>
+              
+              {/* Formulario de Empresa - solo para administradores */}
+              {isAdmin && (
+                <div style={{
+                  background: '#1E293B', 
+                  borderRadius: 16, 
+                  overflow: 'hidden',
+                  boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2)',
+                  border: '1px solid #334155',
+                  display: 'flex',
+                  flexDirection: 'column'
+                }}>
+                  <div style={{
+                    padding: '20px 25px',
+                    borderBottom: '1px solid #334155',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    background: 'rgba(37, 99, 235, 0.1)'
+                  }}>
+                    <span style={{ fontSize: 24, color: '#2563EB' }}>💻️</span>
+                    <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#F1F5F9' }}>Registrar Empresa</h3>
+                  </div>
+                  <div style={{ padding: 0 }}>
+                    <FormEmpresa />
+                  </div>
+                </div>
+              )}
+              
+              {/* El componente de Test de Subida de Imagen ya no es necesario, se eliminó */}
+              
+              {/* Formulario de Noticia - solo para administradores */}
+              {isAdmin && (
+                <div style={{
+                  background: '#1E293B', 
+                  borderRadius: 16, 
+                  overflow: 'hidden',
+                  boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2)',
+                  border: '1px solid #334155',
+                  display: 'flex',
+                  flexDirection: 'column'
+                }}>
+                  <div style={{
+                    padding: '20px 25px',
+                    borderBottom: '1px solid #334155',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    background: 'rgba(249, 115, 22, 0.1)'
+                  }}>
+                    <span style={{ fontSize: 24, color: '#F97316' }}>📰</span>
+                    <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#F1F5F9' }}>Registrar Noticia</h3>
+                  </div>
+                  <div style={{ padding: 0 }}>
+                    <FormNoticia />
+                  </div>
+                </div>
+              )}
+              
+              {/* Mensaje para usuarios no administradores */}
+              {!isAdmin && (
+                <div style={{
+                  background: '#1E293B', 
+                  borderRadius: 16, 
+                  padding: '30px 25px',
+                  boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2)',
+                  border: '1px solid #334155',
+                  gridColumn: window.innerWidth < 768 ? 'auto' : 'span 2',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  textAlign: 'center',
+                  minHeight: 200
+                }}>
+                  <div style={{ fontSize: 50, marginBottom: 20, color: '#F97316', opacity: 0.7 }}>🔒</div>
+                  <h3 style={{ margin: '0 0 15px 0', fontSize: 20, fontWeight: 600, color: '#F1F5F9' }}>
+                    Área Restringida
+                  </h3>
+                  <p style={{ margin: 0, color: '#94A3B8', maxWidth: 400 }}>
+                    Los formularios para registrar empresas y noticias están disponibles solo para administradores. 
+                    Acceda a la sección de Admin para autenticarse.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         )}
           {section === 'formulario' && (
             <FormEvento />
           )}
           {section === 'equipos' && (
-          <div style={{width:'100%',maxWidth:1100,margin:'0 auto',background:'#23272f',borderRadius:20,boxShadow:'0 4px 32px #0033A055',padding:'24px 0 32px 0'}}>
-            <FormEquipo onSuccess={() => {}} />
+          <div style={{width:'100%',maxWidth:1100,margin:'0 auto',padding:'0 0 32px 0'}}>
             <EquiposList />
           </div>
         )}
@@ -151,12 +358,8 @@ function App() {
             width:'100%',
             maxWidth:1100,
             margin:'0 auto',
-            background: '#000000',
-            border: '1px solid #FFDD00',
-            borderTop: '3px solid #FFDD00',
-            padding:'24px 0 32px 0'
+            padding:'0 0 32px 0'
           }}>
-            <FormMiembro onSuccess={() => {}} />
             <MiembrosList />
           </div>
         )}
