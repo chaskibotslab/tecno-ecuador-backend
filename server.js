@@ -5,31 +5,15 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import axios from 'axios';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
 dotenv.config();
 
 const app = express();
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Middleware anti-cache para WebViews móviles - ESTO SOLUCIONA EL PROBLEMA DE LA APP
-app.use((req, res, next) => {
-  // Headers anti-cache específicos para WebViews
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
-  
-  // Headers CORS (manteniendo tu configuración original)
+// Configuración CORS para permitir solicitudes desde cualquier origen
+app.use(function(req, res, next) {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  
-  // Headers adicionales para WebView
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-  
   // Manejar las solicitudes de preflight OPTIONS
   if (req.method === 'OPTIONS') {
     return res.sendStatus(200);
@@ -39,22 +23,6 @@ app.use((req, res, next) => {
 
 // Mantener también el middleware cors para compatibilidad
 app.use(cors());
-
-// Middleware para parsear JSON
-app.use(express.json());
-
-// Servir archivos estáticos (frontend-example)
-app.use(express.static(path.join(__dirname, 'frontend-example'), {
-  setHeaders: (res, filePath) => {
-    // No cachear HTML, JS, CSS en WebViews
-    if (filePath.endsWith('.html') || filePath.endsWith('.js') || filePath.endsWith('.css')) {
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
-    }
-  }
-}));
-
 const upload = multer({ dest: 'uploads/' });
 
 const SCOPES = ['https://www.googleapis.com/auth/drive.file'];
@@ -84,7 +52,6 @@ function getPublicUrl(fileId) {
   return `https://drive.google.com/uc?id=${fileId}`;
 }
 
-// TUS ENDPOINTS ORIGINALES - SIN CAMBIOS
 // Endpoint para subir imagen
 app.post('/upload', upload.single('imagen'), async (req, res) => {
   try {
@@ -129,7 +96,10 @@ app.post('/upload', upload.single('imagen'), async (req, res) => {
   }
 });
 
-// Endpoint para guardar datos en Airtable
+// Ejemplo de endpoint para guardar datos en Airtable
+dotenv.config();
+app.use(express.json());
+
 app.post('/saveAirtable', async (req, res) => {
   // Debes poner tu API key y base ID de Airtable en variables de entorno
   const { table, data, action, id } = req.body;
@@ -182,104 +152,6 @@ app.post('/saveAirtable', async (req, res) => {
   }
 });
 
-// NUEVAS RUTAS PARA SERVIR EL FRONTEND Y SOLUCIONAR EL PROBLEMA DE LA APP
-
-// Ruta específica para /app (donde entra la APP móvil)
-app.get('/app', (req, res) => {
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
-  
-  // Buscar el archivo index.html en la carpeta frontend-example
-  const indexPath = path.join(__dirname, 'frontend-example', 'index.html');
-  
-  if (fs.existsSync(indexPath)) {
-    return res.sendFile(indexPath);
-  }
-  
-  // Si no encuentra el archivo, crear uno temporal
-  res.send(`
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-        <meta http-equiv="Pragma" content="no-cache">
-        <meta http-equiv="Expires" content="0">
-        <title>Tecno Ecuador</title>
-        <style>
-            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
-            .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-            .btn { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin: 10px 0; }
-            .btn:hover { background: #0056b3; }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h1>🚀 Tecno Ecuador</h1>
-            <p>¡Aplicación funcionando correctamente!</p>
-            <p><strong>Timestamp:</strong> ${new Date().toLocaleString()}</p>
-            <button class="btn" onclick="testAPI()">🧪 Probar API</button>
-            <div id="result"></div>
-        </div>
-        <script>
-            console.log('✅ Aplicación cargada - ${new Date().toISOString()}');
-            
-            function testAPI() {
-                fetch('/saveAirtable', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ table: 'test', action: 'list' })
-                })
-                .then(r => r.json())
-                .then(data => {
-                    document.getElementById('result').innerHTML = '<p>✅ API funcionando: ' + JSON.stringify(data).substring(0, 100) + '...</p>';
-                })
-                .catch(e => {
-                    document.getElementById('result').innerHTML = '<p>❌ Error: ' + e.message + '</p>';
-                });
-            }
-            
-            // Auto-test al cargar
-            setTimeout(testAPI, 1000);
-        </script>
-    </body>
-    </html>
-  `);
-});
-
-// Ruta para la raíz - redirigir a /app
-app.get('/', (req, res) => {
-  res.redirect('/app');
-});
-
-// Catch-all para aplicaciones SPA (Single Page Application)
-app.get('*', (req, res) => {
-  // No aplicar catch-all a rutas de API
-  if (req.path.startsWith('/upload') || req.path.startsWith('/saveAirtable')) {
-    return res.status(404).json({ error: 'Endpoint not found' });
-  }
-  
-  // Para cualquier otra ruta, servir la aplicación principal
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  
-  const indexPath = path.join(__dirname, 'frontend-example', 'index.html');
-  
-  if (fs.existsSync(indexPath)) {
-    return res.sendFile(indexPath);
-  }
-  
-  // Si no existe, redirigir a /app
-  res.redirect('/app');
-});
-
-// Puerto dinámico para Railway
-const PORT = process.env.PORT || 3001;
-
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Servidor corriendo en http://0.0.0.0:${PORT}`);
-  console.log(`📱 Frontend disponible en: http://0.0.0.0:${PORT}/app`);
-  console.log(`🌐 Producción: https://chaskibots.com/app`);
-  console.log(`📁 Buscando archivos en: ${path.join(__dirname, 'frontend-example')}`);
+app.listen(3001, '0.0.0.0', () => {
+  console.log('Servidor corriendo en http://0.0.0.0:3001 (accesible en red local)');
 });
