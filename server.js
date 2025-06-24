@@ -5,15 +5,25 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import axios from 'axios';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
 
 const app = express();
-// Configuración CORS para permitir solicitudes desde cualquier origen
+
+// Solo agregar headers anti-cache para WebViews móviles
 app.use(function(req, res, next) {
+  // Headers anti-cache para solucionar problema de APP móvil
+  res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.header('Pragma', 'no-cache');
+  res.header('Expires', '0');
+  
+  // Tu configuración CORS original (sin cambios)
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  
   // Manejar las solicitudes de preflight OPTIONS
   if (req.method === 'OPTIONS') {
     return res.sendStatus(200);
@@ -23,6 +33,21 @@ app.use(function(req, res, next) {
 
 // Mantener también el middleware cors para compatibilidad
 app.use(cors());
+
+// Servir archivos estáticos desde frontend-example (para que la APP encuentre el contenido)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+app.use(express.static(path.join(__dirname, 'frontend-example'), {
+  setHeaders: (res, path) => {
+    // Anti-cache para archivos estáticos también
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+}));
+
+app.use(express.json());
 const upload = multer({ dest: 'uploads/' });
 
 const SCOPES = ['https://www.googleapis.com/auth/drive.file'];
@@ -52,6 +77,7 @@ function getPublicUrl(fileId) {
   return `https://drive.google.com/uc?id=${fileId}`;
 }
 
+// TUS ENDPOINTS ORIGINALES - SIN CAMBIOS
 // Endpoint para subir imagen
 app.post('/upload', upload.single('imagen'), async (req, res) => {
   try {
@@ -96,10 +122,7 @@ app.post('/upload', upload.single('imagen'), async (req, res) => {
   }
 });
 
-// Ejemplo de endpoint para guardar datos en Airtable
-dotenv.config();
-app.use(express.json());
-
+// Endpoint para guardar datos en Airtable
 app.post('/saveAirtable', async (req, res) => {
   // Debes poner tu API key y base ID de Airtable en variables de entorno
   const { table, data, action, id } = req.body;
@@ -152,6 +175,48 @@ app.post('/saveAirtable', async (req, res) => {
   }
 });
 
-app.listen(3001, '0.0.0.0', () => {
-  console.log('Servidor corriendo en http://0.0.0.0:3001 (accesible en red local)');
+// Solo agregar esta ruta para servir tu aplicación en /app
+app.get('/app', (req, res) => {
+  const indexPath = path.join(__dirname, 'frontend-example', 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+        <meta http-equiv="Pragma" content="no-cache">
+        <meta http-equiv="Expires" content="0">
+        <title>Tecno Ecuador</title>
+      </head>
+      <body>
+        <h1>Tecno Ecuador App</h1>
+        <p>Servidor funcionando - ${new Date().toLocaleString()}</p>
+        <script>
+          console.log('App cargada correctamente');
+          // Forzar actualización en WebView
+          if (window.navigator.userAgent.includes('wv')) {
+            console.log('WebView detectado - forzando actualización');
+          }
+        </script>
+      </body>
+      </html>
+    `);
+  }
+});
+
+// Ruta raíz redirige a /app
+app.get('/', (req, res) => {
+  res.redirect('/app');
+});
+
+// Usar puerto dinámico para Railway
+const PORT = process.env.PORT || 3001;
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Servidor corriendo en http://0.0.0.0:${PORT} (accesible en red local)`);
+  console.log(`App disponible en: http://0.0.0.0:${PORT}/app`);
 });
