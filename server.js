@@ -5,40 +5,18 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import axios from 'axios';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
 dotenv.config();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 const app = express();
-
-// Servir archivos estáticos desde public_html/app en la ruta /app
-app.use('/app', express.static(path.join(__dirname, 'public_html/app')));
-
 // Configuración CORS para permitir solicitudes desde cualquier origen
 app.use(function(req, res, next) {
-  // Headers CORS más agresivos
   res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control, Pragma');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Max-Age', '86400'); // 24 hours
-  
-  // Headers anti-cache para WebViews
-  res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.header('Pragma', 'no-cache');
-  res.header('Expires', '0');
-  
-  // Log para debugging
-  console.log(`${req.method} ${req.path} - Origin: ${req.get('Origin') || 'no-origin'}`);
-  
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   // Manejar las solicitudes de preflight OPTIONS
   if (req.method === 'OPTIONS') {
-    console.log('OPTIONS preflight request handled');
-    return res.status(200).end();
+    return res.sendStatus(200);
   }
   next();
 });
@@ -174,43 +152,6 @@ app.post('/saveAirtable', async (req, res) => {
   }
 });
 
-// Ruta específica para /app (para la APP móvil)
-app.get('/app', (req, res) => {
-  const indexPath = path.join(__dirname, 'public_html/app/index.html');
-  if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
-  } else {
-    res.status(404).send('App no encontrada en: ' + indexPath);
-  }
-});
-
-// Ruta específica para /app/* (para React Router)
-app.get('/app/*', (req, res) => {
-  const indexPath = path.join(__dirname, 'public_html/app/index.html');
-  if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
-  } else {
-    res.status(404).send('App no encontrada');
-  }
-});
-
-// Ruta raíz redirige a /app
-app.get('/', (req, res) => {
-  res.redirect('/app');
-});
-
-// Usar puerto dinámico para Railway
-const PORT = process.env.PORT || 3001;
-
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
-  console.log(`📱 App React: http://0.0.0.0:${PORT}/app`);
-  console.log(`📁 Sirviendo desde: ${path.join(__dirname, 'public_html/app')}`);
-  console.log(`🔍 Buscando index.html en: ${path.join(__dirname, 'public_html/app/index.html')}`);
-  
-  // Verificar si los archivos existen
-  const indexExists = fs.existsSync(path.join(__dirname, 'public_html/app/index.html'));
-  const jsExists = fs.existsSync(path.join(__dirname, 'public_html/app/static/js/main.f3bfcb26.js'));
-  console.log(`✅ index.html existe: ${indexExists}`);
-  console.log(`✅ main.js existe: ${jsExists}`);
+app.listen(3001, '0.0.0.0', () => {
+  console.log('Servidor corriendo en http://0.0.0.0:3001 (accesible en red local)');
 });
