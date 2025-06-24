@@ -20,12 +20,25 @@ app.use('/app', express.static(path.join(__dirname, 'public_html/app')));
 
 // Configuración CORS para permitir solicitudes desde cualquier origen
 app.use(function(req, res, next) {
+  // Headers CORS más agresivos
   res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control, Pragma');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Max-Age', '86400'); // 24 hours
+  
+  // Headers anti-cache para WebViews
+  res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.header('Pragma', 'no-cache');
+  res.header('Expires', '0');
+  
+  // Log para debugging
+  console.log(`${req.method} ${req.path} - Origin: ${req.get('Origin') || 'no-origin'}`);
+  
   // Manejar las solicitudes de preflight OPTIONS
   if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
+    console.log('OPTIONS preflight request handled');
+    return res.status(200).end();
   }
   next();
 });
